@@ -1,2 +1,16 @@
 {
+    "name": "vasilyturkin/movie-db-parser",
+    "description": "Parser",
+    "autoload": {
+        "psr-4": {
+            "MovieDbParser\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Vasily Turkin",
+            "email": "turkin1051994@gmail.com"
+        }
+    ],
+    "require": {}
 }
