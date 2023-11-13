@@ -3,7 +3,7 @@
     "description": "Parser",
     "autoload": {
         "psr-4": {
-            "MovieDbParser\\": "src/"
+            "Src\\": "src/"
         }
     },
     "authors": [
@@ -12,5 +12,9 @@
             "email": "turkin1051994@gmail.com"
         }
     ],
-    "require": {}
+    "require": {
+        "imangazaliev/didom": "^2.0",
+        "symfony/dom-crawler": "^6.3",
+        "ext-dom": "*"
+    }
 }
