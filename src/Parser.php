@@ -3,26 +3,33 @@
 namespace Src;
 
 use DiDom\Document;
+use DiDom\Exceptions\InvalidSelectorException;
 
 class Parser
 {
     public const URL = "https://www.imdb.com/search/title/?genres=action";
 
-    private array $links = [];
+    private array $movieData = [];
 
     private int $count = 1;
 
-    public function run()
+    /**
+     * @throws InvalidSelectorException
+     */
+    public function run(): void
     {
         $document = new Document(self::URL, true);
 
         $foundLinks = $document->find('#main > div > div > div > div > div > h3 > a');
 
         foreach ($foundLinks as $link) {
-            $this->links[] = $link->getAttribute('href');
+            $movieName =  $link->text();
+            $movieLink =  $link->getAttribute('href');
+
+            $this->movieData[] = [$movieName => $movieLink];
         }
 
-        var_dump($this->links);
+        print_r($this->movieData);
     }
 }
 
