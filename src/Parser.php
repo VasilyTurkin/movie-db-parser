@@ -9,37 +9,30 @@ class Parser
 {
     public const URL = "https://www.imdb.com/search/title/?genres=action";
 
-    private array $movieData = [];
-
-    private int $count = 1;
+    public const MOVIE_NAME_SELECTOR = 'section > div > div > ul > li > div > div > div > div > div > div > a.ipc-title-link-wrapper';
 
     /**
      * @throws InvalidSelectorException
      */
+
     public function run(): void
     {
+        $moviesData = [];
+
         $document = new Document(self::URL, true);
 
-        $foundLinks = $document->find('#main > div > div > div > div > div > h3 > a');
+        $moviesElement = $document->find(self::MOVIE_NAME_SELECTOR);
 
-        foreach ($foundLinks as $link) {
-            $movieName =  $link->text();
-            $movieLink =  $link->getAttribute('href');
+        foreach ($moviesElement as $movie) {
 
-            $this->movieData[] = [$movieName => $movieLink];
+            $movieLink = $movie->getAttribute('href');
+            $movieName = $movie->text();
+
+            $moviesData[] = [
+                'name' => $movieName,
+                'link' => $movieLink];
         }
 
-        print_r($this->movieData);
+        var_dump($moviesData);
     }
 }
-
-// Action	 Adventure	 Animation	 Biography
-// Comedy	 Crime	 Documentary	 Drama
-// Family	 Fantasy	 Film-Noir	 Game-Show
-// History	 Horror	 Music	 Musical
-// Mystery	 News	 Reality-TV	 Romance
-// Sci-Fi	 Sport	 Talk-Show	 Thriller
-// War	 Western
-
-// Добавлять по кооличеству фильмов
-//<a href="/title/tt2560140/?ref_=adv_li_tt">Атака титанов</a>
