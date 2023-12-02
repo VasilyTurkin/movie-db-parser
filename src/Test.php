@@ -11,5 +11,4 @@ class Test
 }
 
 $string = new Test();
-
 echo $string->test();
