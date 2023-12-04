@@ -7,16 +7,16 @@ use DiDom\Exceptions\InvalidSelectorException;
 
 class Parser
 {
-    public const BASE_URL = 'https://www.imdb.com/';
-    public const MOVIE_HEADER = 'main > div > section > section > div > section > section > div > div > h1 > span';
-    public const ORIGINAL_TITLE = 'section > section > div > section > section > div > div > div';
-    public const YEAR = 'main > div > section > section > div > section > section > div> div > ul > li > a';
-    public const RATING = 'section > section > div > div > div > div > a > span > div > div > div > span';
-    public const POSTER = 'section > div > section > section > div > div > div > div > div > img';
-    public const DESCRIPTION = 'div > section > section > div > section > section > div > div > div > section > p';
-    public const DIRECTOR = 'section > div > div > div > section > div > div > ul > li:nth-child(1) > div > ul > li';
-    public const ACTORS = 'section.ipc-page-section.ipc-page-section--base.sc-bfec09a1-0 > div > div  > div > div > a';
-    public const GENRES = 'section > div > section > section > div > div > div > section > div > div > a > span';
+    private const BASE_URL = 'https://www.imdb.com/';
+    private const TITLE = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > h1';
+    private const ORIGINAL_TITLE = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > div';
+    private const RELEASE_YEAR = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > ul > li:first-child';
+    private const RATING = 'section > section > div > div > div > div > a > span > div > div > div > span';
+    private const POSTER = 'section > div > section > section > div > div > div > div > div > img';
+    private const DESCRIPTION = 'div > section > section > div > section > section > div > div > div > section > p';
+    private const DIRECTORS = 'section > div > div > div > section > div > div > ul > li:nth-child(1) > div > ul > li';
+    private const ACTORS = 'section.ipc-page-section.ipc-page-section--base.sc-bfec09a1-0 > div > div  > div > div > a';
+    private const GENRES = 'section > div > section > section > div > div > div > section > div > div > a > span';
 
     /**
      * @throws InvalidSelectorException
@@ -24,6 +24,8 @@ class Parser
 
     public function run(): void
     {
+
+        $movieMaxIndex = 45;
 
         $moviesData = [];
 
@@ -33,24 +35,25 @@ class Parser
         }
 
         $progressDumpFile = __DIR__ . '/../data/progress.json';
+
         $defaultProgress = [
             'lastSeen' => [
                 'sourceId' => 1,
             ]
         ];
         $progress = $defaultProgress;
+
         if (file_exists($progressDumpFile)) {
             $progress = json_decode(file_get_contents($progressDumpFile), true) ?? $defaultProgress;
         }
 
-        $movieMaxIndex = 5;
+        $startIndex = $progress['lastSeen']['sourceId'] ?? 1;
 
-        $personStartIndex = $progress['lastSeen']['sourceId'] ?? 1;
 
-        if ($personStartIndex === 1) {
-            echo "start parsing\n";
+        if ($startIndex === 1) {
+            echo "Start parsing\n";
         } else {
-            echo "continue parsing from $personStartIndex\n";
+            echo "Continue parsing from $startIndex\n";
         }
 
         for ($i = 1; $i <= $movieMaxIndex; $i++) {
@@ -60,6 +63,7 @@ class Parser
 
             foreach ($moviesData as $movie) {
                 if ($movie['sourceId'] === $movieId) {
+                    echo "$movieId: " . $movie['name'] . ", in the data base\n";
                     $match = true;
                     break;
                 }
@@ -69,31 +73,33 @@ class Parser
                 continue;
             }
 
-            $movieLink = self::BASE_URL . 'title/tt' . $movieId;
-            // Проверка наличия страницы
-            $content = @file_get_contents($movieLink);
+            $movieUrl = self::BASE_URL . 'title/tt' . $movieId;
+
+            $content = @file_get_contents($movieUrl);
             if (!$content) {
+                echo "Not data for parsing. Skip $movieUrl";
                 continue;
-            }
-
-            $document = new Document($movieLink, true);
-
-            $movieNameElement = $document->find(self::ORIGINAL_TITLE)[2]->text();
-
-            if (str_starts_with($movieNameElement, 'Original title:')) {
-                $movieName = str_replace('Original title: ', '', $movieNameElement);
             } else {
-                $movieName = $document->find(self::MOVIE_HEADER)[0]->text();
+                echo "Try parsing:  $movieId \n";
             }
 
-            $year = $document->find(self::YEAR)[0]->text();
+            $document = new Document($movieUrl, true);
 
-            if (empty($year)) {
-                $year = null;
+            $movieNameElement = $document->find(self::ORIGINAL_TITLE);
+
+            if (empty($movieNameElement)) {
+                $movieNameElement = $document->find(self::TITLE);
             }
 
+            $movieName = $movieNameElement[0]->text();
 
-            $rating = $document->find(self::RATING)[0]->text() . '/10';
+            if (str_starts_with($movieName, 'Original title:')) {
+                $movieName = str_replace('Original title: ', '', $movieName);
+            }
+
+            $releaseYear = $document->find(self::RELEASE_YEAR)[0]->text() ?? null;
+
+            $rating = $document->find(self::RATING)[0]->text() ?? null;
 
             $posterElement = $document->find(self::POSTER)[0] ?? null;
 
@@ -101,47 +107,38 @@ class Parser
 
             $description = $document->find(self::DESCRIPTION)[0]->text() ?? null;
 
-            $directors = $document->find(self::DIRECTOR) ?? '';
+            $directorsElements = $document->find(self::DIRECTORS) ?? '';
 
-            $directorsList = [];
+            $directors = array_map(fn($director) => $director->text(), $directorsElements);
 
-            foreach ($directors as $director) {
-                $directorsList[] = $director->text();
-            }
+            $actorsElement = $document->find(self::ACTORS);
 
-            $actors = $document->find(self::ACTORS);
+            $actors = array_map(fn($actor) => $actor->text(), $actorsElement);
 
-            $actorsList = [];
+            $genresElement = $document->find(self::GENRES);
 
-            foreach ($actors as $actor) {
-                $actorsName = $actor->text();
-                //проверку на пустоту
-                $actorsList[] = $actorsName;
-            }
-
-            $genres = $document->find(self::GENRES);
-
-            $genresList = [];
-
-            foreach ($genres as $genre) {
-                $genresList[] = $genre->text();
-            }
+            $genres = array_map(fn($genre) => $genre->text(), $genresElement);
 
             $moviesData[] = [
                 'sourceId' => $movieId,
                 'name' => $movieName,
-                'link' => $movieLink,
-                'year' => $year,
+                'link' => $movieUrl,
+                'release_year' => $releaseYear,
                 'rating' => $rating,
                 'poster' => $poster,
                 'description' => $description,
-                'director' => $directorsList,
-                'actor' => $actorsList,
-                'genres' => $genresList
+                'directors' => $directors,
+                'actor' => $actors,
+                'genres' => $genres
             ];
 
-            $count = $progress['lastSeen']['sourceId'] = $i;
-            echo "($count)save movie: $movieName\n";
+            usort($moviesData, function ($a, $b) {
+                return strcmp($a['sourceId'], $b['sourceId']);
+            });
+
+            $progress['lastSeen']['sourceId'] = $i;
+
+            echo "Save movie: $movieName\n";
 
             file_put_contents($moviesStorageFile, json_encode($moviesData));
 

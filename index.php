@@ -2,7 +2,7 @@
 
 use Src\Parser;
 
-require_once "vendor/autoload.php";
+require_once 'vendor/autoload.php';
 
 $parser = new Parser();
 
