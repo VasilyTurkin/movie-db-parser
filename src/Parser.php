@@ -142,7 +142,7 @@ class Parser
 
             file_put_contents($moviesStorageFile, json_encode($moviesData));
 
-            file_put_contents($progressDumpFile, json_encode($progress))
+            file_put_contents($progressDumpFile, json_encode($progress));
         }
     }
 }
