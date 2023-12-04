@@ -15,7 +15,14 @@
     "require": {
         "imangazaliev/didom": "^2.0",
         "symfony/dom-crawler": "^6.3",
-        "ext-dom": "*",
-      "ext-http": "*"
+        "ext-dom": "*"
+    },
+    "require-dev": {
+        "phpro/grumphp": "^2.3"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpro/grumphp": true
+        }
     }
 }
