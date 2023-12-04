@@ -17,12 +17,12 @@
         "symfony/dom-crawler": "^6.3",
         "ext-dom": "*"
     },
-    "require-dev": {
-        "phpro/grumphp": "^2.3"
-    },
     "config": {
         "allow-plugins": {
             "phpro/grumphp": true
         }
+    },
+    "require-dev": {
+        "phpro/grumphp": "^2.3"
     }
 }
