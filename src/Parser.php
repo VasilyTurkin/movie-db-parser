@@ -25,7 +25,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 45;
+        $movieMaxIndex = 5;
 
         $moviesData = [];
 
@@ -35,12 +35,12 @@ class Parser
         }
 
         $progressDumpFile = __DIR__ . '/../data/progress.json';
-
         $defaultProgress = [
             'lastSeen' => [
                 'sourceId' => 1,
             ]
         ];
+
         $progress = $defaultProgress;
 
         if (file_exists($progressDumpFile)) {
@@ -56,7 +56,7 @@ class Parser
             echo "Continue parsing from $startIndex\n";
         }
 
-        for ($i = 1; $i <= $movieMaxIndex; $i++) {
+        for ($i = $startIndex; $i <= $movieMaxIndex; $i++) {
             $movieId = sprintf('%07d', $i);
 
             $match = false;
@@ -145,4 +145,3 @@ class Parser
             file_put_contents($progressDumpFile, json_encode($progress));
         }
     }
-}

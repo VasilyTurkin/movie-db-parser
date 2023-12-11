@@ -26,6 +26,6 @@
     "require-dev": {
         "ergebnis/composer-normalize": "^2.39",
         "nette/tester": "^2.5",
-        "phpro/grumphp": "^2.3.0"
+        "phpro/grumphp": "^2.3"
     }
 }
