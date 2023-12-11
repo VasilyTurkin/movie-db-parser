@@ -6,6 +6,7 @@ require_once 'vendor/autoload.php';
 
 $parser = new Parser();
 
-$parser->run()
+$parser->run();
+
 
 

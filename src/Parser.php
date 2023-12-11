@@ -25,7 +25,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 5;
+        $movieMaxIndex = 1;
 
         $moviesData = [];
 
@@ -145,3 +145,4 @@ class Parser
             file_put_contents($progressDumpFile, json_encode($progress));
         }
     }
+

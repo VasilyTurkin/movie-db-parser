@@ -19,13 +19,12 @@
     },
     "config": {
         "allow-plugins": {
-            "ergebnis/composer-normalize": true,
-            "phpro/grumphp": true
+            "ergebnis/composer-normalize": true
         }
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.39",
         "nette/tester": "^2.5",
-        "phpro/grumphp": "^2.3"
+        "squizlabs/php_codesniffer": "3.8.0"
     }
 }
