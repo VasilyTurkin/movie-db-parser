@@ -25,7 +25,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 1;
+        $movieMaxIndex = 99999999;
 
         $moviesData = [];
 
@@ -48,8 +48,6 @@ class Parser
         }
 
         $startIndex = $progress['lastSeen']['sourceId'] ?? 1;
-
-
         if ($startIndex === 1) {
             echo "Start parsing\n";
         } else {
@@ -107,7 +105,7 @@ class Parser
 
             $description = $document->find(self::DESCRIPTION)[0]->text() ?? null;
 
-            $directorsElements = $document->find(self::DIRECTORS) ?? '';
+            $directorsElements = $document->find(self::DIRECTORS) ?? [];
 
             $directors = array_map(fn($director) => $director->text(), $directorsElements);
 
@@ -115,7 +113,7 @@ class Parser
 
             $actors = array_map(fn($actor) => $actor->text(), $actorsElement);
 
-            $genresElement = $document->find(self::GENRES);
+            $genresElement = $document->find(self::GENRES) ?? [];
 
             $genres = array_map(fn($genre) => $genre->text(), $genresElement);
 
@@ -128,7 +126,7 @@ class Parser
                 'poster' => $poster,
                 'description' => $description,
                 'directors' => $directors,
-                'actor' => $actors,
+                'actors' => $actors,
                 'genres' => $genres
             ];
 
@@ -145,6 +143,4 @@ class Parser
             file_put_contents($progressDumpFile, json_encode($progress));
         }
     }
-
-
-
+}
