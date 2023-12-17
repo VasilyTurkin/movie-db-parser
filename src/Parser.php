@@ -74,6 +74,7 @@ class Parser
             $movieUrl = self::BASE_URL . 'title/tt' . $movieId;
 
             $content = @file_get_contents($movieUrl);
+
             if (!$content) {
                 echo "Not data for parsing. Skip $movieUrl";
                 continue;
