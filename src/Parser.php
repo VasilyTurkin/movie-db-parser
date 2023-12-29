@@ -54,6 +54,8 @@ class Parser
             echo "Continue parsing from $startIndex\n";
         }
 
+        $startTotalTime = microtime(true);
+
         for ($i = $startIndex; $i <= $movieMaxIndex; $i++) {
             $movieId = sprintf('%07d', $i);
 
@@ -81,6 +83,8 @@ class Parser
             } else {
                 echo "Try parsing:  $movieId \n";
             }
+
+            $startParsingMovie = microtime(true);
 
             $document = new Document($movieUrl, true);
 
@@ -137,11 +141,21 @@ class Parser
 
             $progress['lastSeen']['sourceId'] = $i;
 
-            echo "Save movie: $movieName\n";
-
             file_put_contents($moviesStorageFile, json_encode($moviesData));
 
             file_put_contents($progressDumpFile, json_encode($progress));
+
+            $endParsingMovie = microtime(true);
+
+            $timeParsingMovie = round(($endParsingMovie - $startParsingMovie),1);
+
+            echo "Save movie: $movieName (Runtime: $timeParsingMovie)\n";
         }
+
+        $endTotalTime = microtime(true);
+
+        $totalTime = gmdate("H:i:s", round($endTotalTime - $startTotalTime));
+
+        echo "Total time: $totalTime";
     }
 }
