@@ -3,6 +3,7 @@
 namespace Src;
 
 use DiDom\Document;
+use DiDom\Element;
 use DiDom\Exceptions\InvalidSelectorException;
 
 class Parser
@@ -25,7 +26,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 99999999;
+        $movieMaxIndex = 180;
 
         $moviesData = [];
 
@@ -102,7 +103,13 @@ class Parser
 
             $releaseYear = $document->find(self::RELEASE_YEAR)[0]->text() ?? null;
 
-            $rating = $document->find(self::RATING)[0]->text() ?? null;
+            $ratingElement = $document->find(self::RATING);
+
+            if (!empty($ratingElement[0])) {
+                $rating = $ratingElement[0]->text();
+            } else {
+                $rating = null;
+            }
 
             $posterElement = $document->find(self::POSTER)[0] ?? null;
 
@@ -147,7 +154,7 @@ class Parser
 
             $endParsingMovie = microtime(true);
 
-            $timeParsingMovie = round(($endParsingMovie - $startParsingMovie),1);
+            $timeParsingMovie = round(($endParsingMovie - $startParsingMovie), 1);
 
             echo "Save movie: $movieName (Runtime: $timeParsingMovie)\n";
         }
