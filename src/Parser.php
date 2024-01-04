@@ -101,7 +101,13 @@ class Parser
                 $movieName = str_replace('Original title: ', '', $movieName);
             }
 
-            $releaseYear = $document->find(self::RELEASE_YEAR)[0]->text() ?? null;
+            $releaseYearElement = $document->find(self::RELEASE_YEAR);
+
+            if (!empty($releaseYearElement[0])) {
+                $releaseYear = $releaseYearElement[0]->text();
+            } else {
+                $releaseYear = null;
+            }
 
             $ratingElement = $document->find(self::RATING);
 
