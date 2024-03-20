@@ -26,10 +26,10 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 99999999;
+        $movieMaxIndex = 30;
 
         $moviesData = [];
-
+        
         $moviesStorageFile = __DIR__ . '/../data/movies.json';
         if (file_exists($moviesStorageFile)) {
             $moviesData = json_decode(file_get_contents($moviesStorageFile), true) ?? [];
@@ -79,7 +79,7 @@ class Parser
             $content = @file_get_contents($movieUrl);
 
             if (!$content) {
-                echo "Not data for parsing. Skip $movieUrl";
+                echo "Not data for parsing. Skip $movieUrl \n";
                 continue;
             } else {
                 echo "Try parsing:  $movieId \n";

@@ -11,4 +11,3 @@ try {
     $parser->run();
 } catch (InvalidSelectorException $e) {
 }
-
