@@ -8,7 +8,7 @@ use DiDom\Exceptions\InvalidSelectorException;
 class Parser
 {
     private const BASE_URL = 'https://www.imdb.com/';
-    private const TITLE = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > h1';
+    private const TITLE = 'div > section > section > div:nth-child(5) > section > section > div.sc-491663c0-3.bdjVSf > div > h1 > span';
     private const ORIGINAL_TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div.sc-67fa2588-0.cFndlt > div';
     private const RELEASE_YEAR = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > ul > li:first-child';
     private const RATING = 'section > section > div > div > div > div > a > span > div > div > div > span';
@@ -25,7 +25,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 99999999;
+        $movieMaxIndex = 20;
 
         $moviesData = [];
 

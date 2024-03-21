@@ -45,5 +45,7 @@ foreach ($moviesData as $movie) {
     $sqlInsert->bindParam(':poster', $movie['poster']);
     $sqlInsert->bindParam(':description', $movie['description']);
 
-    $sqlInsert->execute();
+    if($sqlInsert->execute()){
+        echo $movie['sourceId'] ." added od data base \n";
+    }
 }
