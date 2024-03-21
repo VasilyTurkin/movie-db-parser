@@ -15,7 +15,8 @@
     "require": {
         "imangazaliev/didom": "^2.0",
         "symfony/dom-crawler": "^6.3",
-        "ext-dom": "*"
+        "ext-dom": "*",
+      "ext-pdo": "*"
     },
     "config": {
         "allow-plugins": {

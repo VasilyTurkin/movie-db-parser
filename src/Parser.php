@@ -3,6 +3,7 @@
 namespace Src;
 
 use DiDom\Document;
+use DiDom\Element;
 use DiDom\Exceptions\InvalidSelectorException;
 
 class Parser
@@ -25,7 +26,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 99999999;
+        $movieMaxIndex = 30;
 
         $moviesData = [];
 
@@ -78,7 +79,7 @@ class Parser
             $content = @file_get_contents($movieUrl);
 
             if (!$content) {
-                echo "Not data for parsing. Skip $movieUrl";
+                echo "Not data for parsing. Skip $movieUrl \n";
                 continue;
             } else {
                 echo "Try parsing:  $movieId \n";
@@ -100,9 +101,21 @@ class Parser
                 $movieName = str_replace('Original title: ', '', $movieName);
             }
 
-            $releaseYear = $document->find(self::RELEASE_YEAR)[0]->text() ?? null;
+            $releaseYearElement = $document->find(self::RELEASE_YEAR);
 
-            $rating = $document->find(self::RATING)[0]->text() ?? null;
+            if (!empty($releaseYearElement[0])) {
+                $releaseYear = $releaseYearElement[0]->text();
+            } else {
+                $releaseYear = null;
+            }
+
+            $ratingElement = $document->find(self::RATING);
+
+            if (!empty($ratingElement[0])) {
+                $rating = $ratingElement[0]->text();
+            } else {
+                $rating = null;
+            }
 
             $posterElement = $document->find(self::POSTER)[0] ?? null;
 
@@ -147,7 +160,7 @@ class Parser
 
             $endParsingMovie = microtime(true);
 
-            $timeParsingMovie = round(($endParsingMovie - $startParsingMovie),1);
+            $timeParsingMovie = round(($endParsingMovie - $startParsingMovie), 1);
 
             echo "Save movie: $movieName (Runtime: $timeParsingMovie)\n";
         }

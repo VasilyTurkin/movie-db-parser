@@ -2,3 +2,6 @@
 /.idea
 .phpunit.result.cache
 .DS_Store
+/data/
+!/data/.gitkeeper
+notes.txt
