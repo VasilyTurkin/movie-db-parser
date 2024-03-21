@@ -25,7 +25,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 10;
+        $movieMaxIndex = 99999999;
 
         $moviesData = [];
 

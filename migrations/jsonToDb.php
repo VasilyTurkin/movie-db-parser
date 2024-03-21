@@ -18,7 +18,7 @@ if (file_exists($moviesStorageFile)) {
 
 $db = new PDO('mysql:host=localhost;dbname=Movie', $user, $pass);
 
-$select = 'SELECT source_id FROM movies WHERE source_id = :source_id';
+$select = 'SELECT source_id FROM movies WHERE source_id = :source_id LIMIT 1';
 
 $insert = 'INSERT INTO movies (source_id, name, link, release_year, rating, poster, description)
               VALUES (:source_id, :name, :link, :release_year, :rating, :poster, :description)';
@@ -31,7 +31,7 @@ foreach ($moviesData as $movie) {
 
     $sqlSelect->execute();
 
-    if ($sqlSelect->fetchColumn()) {
+    if ($sqlSelect->fetch()) {
         continue;
     }
 
@@ -47,5 +47,3 @@ foreach ($moviesData as $movie) {
 
     $sqlInsert->execute();
 }
-
-$db = null;
