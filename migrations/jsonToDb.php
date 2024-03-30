@@ -24,7 +24,6 @@ $insert = 'INSERT INTO movies (source_id, name, link, release_year, rating, post
               VALUES (:source_id, :name, :link, :release_year, :rating, :poster, :description)';
 
 foreach ($moviesData as $movie) {
-
     $sqlSelect = $db->prepare($select);
 
     $sqlSelect->bindParam(':source_id', $movie['sourceId']);
@@ -45,7 +44,7 @@ foreach ($moviesData as $movie) {
     $sqlInsert->bindParam(':poster', $movie['poster']);
     $sqlInsert->bindParam(':description', $movie['description']);
 
-    if($sqlInsert->execute()){
-        echo $movie['sourceId'] ." added od data base \n";
+    if ($sqlInsert->execute()) {
+        echo $movie['sourceId'] . " added on data base \n";
     }
 }
