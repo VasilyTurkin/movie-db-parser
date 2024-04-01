@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS crew_members
 (
     id        BIGINT       NOT NULL,
     full_name VARCHAR(255) NOT NULL,
+    position  VARCHAR(255) NULL,
     PRIMARY KEY (id)
 );
 

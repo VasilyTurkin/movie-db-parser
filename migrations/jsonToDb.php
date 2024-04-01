@@ -18,33 +18,64 @@ if (file_exists($moviesStorageFile)) {
 
 $db = new PDO('mysql:host=localhost;dbname=Movie', $user, $pass);
 
-$select = 'SELECT source_id FROM movies WHERE source_id = :source_id LIMIT 1';
-
-$insert = 'INSERT INTO movies (source_id, name, link, release_year, rating, poster, description)
-              VALUES (:source_id, :name, :link, :release_year, :rating, :poster, :description)';
-
 foreach ($moviesData as $movie) {
-    $sqlSelect = $db->prepare($select);
 
-    $sqlSelect->bindParam(':source_id', $movie['sourceId']);
+    $selectMovieQuery = 'SELECT source_id FROM movies WHERE source_id = :source_id LIMIT 1';
 
-    $sqlSelect->execute();
+    $selectMovie = $db->prepare($selectMovieQuery);
 
-    if ($sqlSelect->fetch()) {
+    $selectMovie->bindParam(':source_id', $movie['sourceId']);
+
+    $selectMovie->execute();
+
+    if ($selectMovie->fetch()) {
         continue;
     }
 
-    $sqlInsert = $db->prepare($insert);
+    $insertMovieQuery = 'INSERT INTO movies (source_id, name, link, release_year, rating, poster, description)
+                VALUES (:source_id, :name, :link, :release_year, :rating, :poster, :description)';
 
-    $sqlInsert->bindParam(':source_id', $movie['sourceId']);
-    $sqlInsert->bindParam(':name', $movie['name']);
-    $sqlInsert->bindParam(':link', $movie['link']);
-    $sqlInsert->bindParam(':release_year', $movie['release_year']);
-    $sqlInsert->bindParam(':rating', $movie['rating']);
-    $sqlInsert->bindParam(':poster', $movie['poster']);
-    $sqlInsert->bindParam(':description', $movie['description']);
+    $insertMovie = $db->prepare($insertMovieQuery);
 
-    if ($sqlInsert->execute()) {
-        echo $movie['sourceId'] . " added on data base \n";
+    $insertMovie->bindParam(':source_id', $movie['sourceId']);
+    $insertMovie->bindParam(':name', $movie['name']);
+    $insertMovie->bindParam(':link', $movie['link']);
+    $insertMovie->bindParam(':release_year', $movie['release_year']);
+    $insertMovie->bindParam(':rating', $movie['rating']);
+    $insertMovie->bindParam(':poster', $movie['poster']);
+    $insertMovie->bindParam(':description', $movie['description']);
+
+    if ($insertMovie->execute()) {
+        echo $movie['sourceId'] . " added to data base" . PHP_EOL;
+    }
+
+    $lastMovieId = $db->lastInsertId();
+
+    echo $lastMovieId . PHP_EOL;
+
+    foreach ($movie['genres'] as $genre) {
+
+        $selectGenreQuery = 'SELECT id FROM genres WHERE name = :name LIMIT 1';
+
+        $selectGenre = $db->prepare($selectGenreQuery);
+
+        $selectGenre->bindParam(':name', $genre);
+
+        $selectGenre->execute();
+
+        if ($selectGenre->fetch()) {
+            continue;
+        }
+
+        $insertGenreQuery = 'INSERT INTO genres (name) VALUE (:name)';
+
+        $insertGenre = $db->prepare($insertGenreQuery);
+
+        $insertGenre->bindParam(':name', $genre);
+
+        $insertGenre->execute();
+
+//        $lastGenreId = $db->lastInsertId();
+
     }
 }
