@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS movie_genre
 
 CREATE TABLE IF NOT EXISTS crew_members
 (
-    id        BIGINT       NOT NULL,
+    id        BIGINT   AUTO_INCREMENT NOT NULL,
     full_name VARCHAR(255) NOT NULL,
     position  VARCHAR(255) NULL,
     PRIMARY KEY (id)

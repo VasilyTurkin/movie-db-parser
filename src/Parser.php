@@ -9,7 +9,7 @@ class Parser
 {
     private const BASE_URL = 'https://www.imdb.com/';
     private const TITLE = 'div > section > section > div:nth-child(5) > section > section > div.sc-491663c0-3.bdjVSf > div > h1 > span';
-    private const ORIGINAL_TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div.sc-67fa2588-0.cFndlt > div';
+    private const ORIGINAL_TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div > h1 > span';
     private const RELEASE_YEAR = 'main > div > section > section > div:nth-child(5) > section > section > div > div > ul > li:nth-child(1) > a';
     private const RATING = 'section > section > div > div > div > div > a > span > div > div > div > span';
     private const POSTER = 'section > div > section > section > div > div > div > div > div > img';
