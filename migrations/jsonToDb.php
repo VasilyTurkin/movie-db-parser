@@ -4,10 +4,63 @@ namespace Src;
 
 use PDO;
 
+function addGenre(object $db, string $genre, int $movieId): void
+{
+    $selectGenreQuery = 'SELECT id FROM genres WHERE name = :name_genre LIMIT 1';
+    $selectGenre = $db->prepare($selectGenreQuery);
+    $selectGenre->bindParam(':name_genre', $genre);
+    $selectGenre->execute();
 
-$user = '';
+    if ($findGenre = $selectGenre->fetch(PDO::FETCH_ASSOC)) {
+        $genreId = $findGenre['id'];
+    } else {
+        $insertGenreQuery = 'INSERT INTO genres (name) VALUES (:name_genre)';
+        $insertGenre = $db->prepare($insertGenreQuery);
+        $insertGenre->bindParam(':name_genre', $genre);
+        $insertGenre->execute();
 
-$pass = '';
+        $genreId = $db->lastInsertId();
+    }
+
+    $insertMovieGenreQuery = 'INSERT IGNORE INTO movie_genre (movie_id, genre_id) VALUES (:movie_id, :genre_id)';
+    $insertMovieGenre = $db->prepare($insertMovieGenreQuery);
+    $insertMovieGenre->bindParam(':movie_id', $movieId);
+    $insertMovieGenre->bindParam(':genre_id', $genreId);
+    $insertMovieGenre->execute();
+}
+
+function addPerson(object $db, string $personName, string $position, int $movieId): void
+{
+    $selectPersonQuery = 'SELECT id FROM crew_members WHERE full_name = :full_name LIMIT 1';
+
+    $selectPerson = $db->prepare($selectPersonQuery);
+    $selectPerson->bindParam(':full_name', $personName);
+    $selectPerson->execute();
+
+    if ($existingPerson = $selectPerson->fetch(PDO::FETCH_ASSOC)) {
+        $personId = $existingPerson['id'];
+    } else {
+        $insertPersonQuery = 'INSERT INTO crew_members (full_name, position)
+                          VALUES (:full_name, :position)';
+
+        $insertPerson = $db->prepare($insertPersonQuery);
+        $insertPerson->bindParam(':full_name', $personName);
+        $insertPerson->bindParam(':position', $position);
+        $insertPerson->execute();
+        $personId = $db->lastInsertId();
+    }
+
+    $assignQuery = 'INSERT IGNORE INTO movie_crew_member (movie_id, crew_member_id)
+                                   VALUES (:movie_id, :crew_member_id)';
+    $assignStatement = $db->prepare($assignQuery);
+    $assignStatement->bindParam(':movie_id', $movieId);
+    $assignStatement->bindParam(':crew_member_id', $personId);
+    $assignStatement->execute();
+}
+
+$user = 'turkin';
+
+$pass = 'Ajnc3&32__dw62';
 
 $moviesData = [];
 
@@ -62,58 +115,4 @@ foreach ($moviesData as $movie) {
         $position = 'actor';
         addPerson($db, $personName, $position, $movieId);
     }
-}
-
-function addGenre(object $db, string $genre, int $movieId): void
-{
-    $selectGenreQuery = 'SELECT id FROM genres WHERE name = :name_genre LIMIT 1';
-    $selectGenre = $db->prepare($selectGenreQuery);
-    $selectGenre->bindParam(':name_genre', $genre);
-    $selectGenre->execute();
-
-    if ($findGenre = $selectGenre->fetch(PDO::FETCH_ASSOC)) {
-        $genreId = $findGenre['id'];
-    } else {
-        $insertGenreQuery = 'INSERT INTO genres (name) VALUES (:name_genre)';
-        $insertGenre = $db->prepare($insertGenreQuery);
-        $insertGenre->bindParam(':name_genre', $genre);
-        $insertGenre->execute();
-
-        $genreId = $db->lastInsertId();
-    }
-
-    $insertMovieGenreQuery = 'INSERT IGNORE INTO movie_genre (movie_id, genre_id) VALUES (:movie_id, :genre_id)';
-    $insertMovieGenre = $db->prepare($insertMovieGenreQuery);
-    $insertMovieGenre->bindParam(':movie_id', $movieId);
-    $insertMovieGenre->bindParam(':genre_id', $genreId);
-    $insertMovieGenre->execute();
-}
-
-function addPerson(object $db, string $personName, string $position, int $movieId): void
-{
-    $selectPersonQuery = 'SELECT id FROM crew_members WHERE full_name = :full_name LIMIT 1';
-
-    $selectPerson = $db->prepare($selectPersonQuery);
-    $selectPerson->bindParam(':full_name', $personName);
-    $selectPerson->execute();
-
-    if ($existingPerson = $selectPerson->fetch(PDO::FETCH_ASSOC)) {
-        $personId = $existingPerson['id'];
-    } else {
-        $insertPersonQuery = 'INSERT INTO crew_members (full_name, position)
-                          VALUES (:full_name, :position)';
-
-        $insertPerson = $db->prepare($insertPersonQuery);
-        $insertPerson->bindParam(':full_name', $personName);
-        $insertPerson->bindParam(':position', $position);
-        $insertPerson->execute();
-        $personId = $db->lastInsertId();
-    }
-
-    $assignQuery = 'INSERT IGNORE INTO movie_crew_member (movie_id, crew_member_id)
-                                   VALUES (:movie_id, :crew_member_id)';
-    $assignStatement = $db->prepare($assignQuery);
-    $assignStatement->bindParam(':movie_id', $movieId);
-    $assignStatement->bindParam(':crew_member_id', $personId);
-    $assignStatement->execute();
 }
