@@ -58,9 +58,9 @@ function addPerson(object $db, string $personName, string $position, int $movieI
     $assignStatement->execute();
 }
 
-$user = 'turkin';
+$user = '';
 
-$pass = 'Ajnc3&32__dw62';
+$pass = '';
 
 $moviesData = [];
 
