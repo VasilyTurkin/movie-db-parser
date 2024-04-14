@@ -3,15 +3,14 @@
 namespace Src;
 
 use DiDom\Document;
-use DiDom\Element;
 use DiDom\Exceptions\InvalidSelectorException;
 
 class Parser
 {
     private const BASE_URL = 'https://www.imdb.com/';
-    private const TITLE = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > h1';
-    private const ORIGINAL_TITLE = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > div';
-    private const RELEASE_YEAR = 'section > section > div:nth-child(4) > section > section > div:nth-child(2) > div:first-child > ul > li:first-child';
+    private const TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div > h1 > span';
+    private const ORIGINAL_TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div.sc-67fa2588-0.cFndlt > div';
+    private const RELEASE_YEAR = 'main > div > section > section > div:nth-child(5) > section > section > div > div > ul > li:nth-child(1) > a';
     private const RATING = 'section > section > div > div > div > div > a > span > div > div > div > span';
     private const POSTER = 'section > div > section > section > div > div > div > div > div > img';
     private const DESCRIPTION = 'div > section > section > div > section > section > div > div > div > section > p';
@@ -26,10 +25,10 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 30;
+        $movieMaxIndex = 9999999;
 
         $moviesData = [];
-        
+
         $moviesStorageFile = __DIR__ . '/../data/movies.json';
         if (file_exists($moviesStorageFile)) {
             $moviesData = json_decode(file_get_contents($moviesStorageFile), true) ?? [];
