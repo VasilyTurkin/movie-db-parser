@@ -9,7 +9,7 @@ class Parser
 {
     private const BASE_URL = 'https://www.imdb.com/';
     private const TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div > h1 > span';
-    private const ORIGINAL_TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div.sc-67fa2588-0.cFndlt > div';
+    private const ORIGINAL_TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div.sc-b7c53eda-0.dUpRPQ > div';
     private const RELEASE_YEAR = 'main > div > section > section > div:nth-child(5) > section > section > div > div > ul > li:nth-child(1) > a';
     private const RATING = 'section > section > div > div > div > div > a > span > div > div > div > span';
     private const POSTER = 'section > div > section > section > div > div > div > div > div > img';
@@ -18,6 +18,7 @@ class Parser
     private const ACTORS = 'section.ipc-page-section.ipc-page-section--base.sc-bfec09a1-0 > div > div  > div > div > a';
     private const GENRES = 'section > div > section > section > div > div > div > section > div > div > a > span';
 
+
     /**
      * @throws InvalidSelectorException
      */
@@ -25,7 +26,7 @@ class Parser
     public function run(): void
     {
 
-        $movieMaxIndex = 9999999;
+        $movieMaxIndex = 10;
 
         $moviesData = [];
 
