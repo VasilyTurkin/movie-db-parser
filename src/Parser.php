@@ -3,6 +3,7 @@
 namespace Src;
 
 use DiDom\Document;
+use PDO;
 use DiDom\Exceptions\InvalidSelectorException;
 
 class Parser
@@ -18,22 +19,19 @@ class Parser
     private const ACTORS = 'section.ipc-page-section.ipc-page-section--base.sc-bfec09a1-0 > div > div  > div > div > a';
     private const GENRES = 'section > div > section > section > div > div > div > section > div > div > a > span';
 
-
     /**
      * @throws InvalidSelectorException
      */
 
     public function run(): void
     {
+        $user = '';
 
-        $movieMaxIndex = 10;
+        $pass = null;
 
-        $moviesData = [];
+        $db = new PDO();
 
-        $moviesStorageFile = __DIR__ . '/../data/movies.json';
-        if (file_exists($moviesStorageFile)) {
-            $moviesData = json_decode(file_get_contents($moviesStorageFile), true) ?? [];
-        }
+        $movieMaxIndex = 15;
 
         $progressDumpFile = __DIR__ . '/../data/progress.json';
         $defaultProgress = [
@@ -41,6 +39,59 @@ class Parser
                 'sourceId' => 1,
             ]
         ];
+
+        function addPerson(object $db, string $personName, string $position, int $movieId): void
+        {
+            $selectPersonQuery = 'SELECT id FROM crew_members WHERE full_name = :full_name LIMIT 1';
+
+            $selectPerson = $db->prepare($selectPersonQuery);
+            $selectPerson->bindParam(':full_name', $personName);
+            $selectPerson->execute();
+
+            if ($existingPerson = $selectPerson->fetch(PDO::FETCH_ASSOC)) {
+                $personId = $existingPerson['id'];
+            } else {
+                $insertPersonQuery = 'INSERT INTO crew_members (full_name, position)
+                          VALUES (:full_name, :position)';
+
+                $insertPerson = $db->prepare($insertPersonQuery);
+                $insertPerson->bindParam(':full_name', $personName);
+                $insertPerson->bindParam(':position', $position);
+                $insertPerson->execute();
+                $personId = $db->lastInsertId();
+            }
+            $assignQuery = 'INSERT IGNORE INTO movie_crew_member (movie_id, crew_member_id)
+                                   VALUES (:movie_id, :crew_member_id)';
+            $assignStatement = $db->prepare($assignQuery);
+            $assignStatement->bindParam(':movie_id', $movieId);
+            $assignStatement->bindParam(':crew_member_id', $personId);
+            $assignStatement->execute();
+        }
+
+        function addGenre(object $db, string $genre, int $movieId): void
+        {
+            $selectGenreQuery = 'SELECT id FROM genres WHERE name = :name_genre LIMIT 1';
+            $selectGenre = $db->prepare($selectGenreQuery);
+            $selectGenre->bindParam(':name_genre', $genre);
+            $selectGenre->execute();
+
+            if ($findGenre = $selectGenre->fetch(PDO::FETCH_ASSOC)) {
+                $genreId = $findGenre['id'];
+            } else {
+                $insertGenreQuery = 'INSERT INTO genres (name) VALUES (:name_genre)';
+                $insertGenre = $db->prepare($insertGenreQuery);
+                $insertGenre->bindParam(':name_genre', $genre);
+                $insertGenre->execute();
+
+                $genreId = $db->lastInsertId();
+            }
+
+            $insertMovieGenreQuery = 'INSERT IGNORE INTO movie_genre (movie_id, genre_id) VALUES (:movie_id, :genre_id)';
+            $insertMovieGenre = $db->prepare($insertMovieGenreQuery);
+            $insertMovieGenre->bindParam(':movie_id', $movieId);
+            $insertMovieGenre->bindParam(':genre_id', $genreId);
+            $insertMovieGenre->execute();
+        }
 
         $progress = $defaultProgress;
 
@@ -58,23 +109,9 @@ class Parser
         $startTotalTime = microtime(true);
 
         for ($i = $startIndex; $i <= $movieMaxIndex; $i++) {
-            $movieId = sprintf('%07d', $i);
+            $source_id = sprintf('%07d', $i);
 
-            $match = false;
-
-            foreach ($moviesData as $movie) {
-                if ($movie['sourceId'] === $movieId) {
-                    echo "$movieId: " . $movie['name'] . ", in the data base\n";
-                    $match = true;
-                    break;
-                }
-            }
-
-            if ($match) {
-                continue;
-            }
-
-            $movieUrl = self::BASE_URL . 'title/tt' . $movieId;
+            $movieUrl = self::BASE_URL . 'title/tt' . $source_id;
 
             $content = @file_get_contents($movieUrl);
 
@@ -82,7 +119,7 @@ class Parser
                 echo "Not data for parsing. Skip $movieUrl \n";
                 continue;
             } else {
-                echo "Try parsing:  $movieId \n";
+                echo "Try parsing:  $source_id \n";
             }
 
             $startParsingMovie = microtime(true);
@@ -123,6 +160,10 @@ class Parser
 
             $description = $document->find(self::DESCRIPTION)[0]->text() ?? null;
 
+            $genresElement = $document->find(self::GENRES) ?? [];
+
+            $genres = array_map(fn($genre) => $genre->text(), $genresElement);
+
             $directorsElements = $document->find(self::DIRECTORS) ?? [];
 
             $directors = array_map(fn($director) => $director->text(), $directorsElements);
@@ -131,30 +172,52 @@ class Parser
 
             $actors = array_map(fn($actor) => $actor->text(), $actorsElement);
 
-            $genresElement = $document->find(self::GENRES) ?? [];
+            $selectMovieQuery = 'SELECT id FROM movies WHERE source_id = :source_id LIMIT 1';
+            $selectMovie = $db->prepare($selectMovieQuery);
+            $selectMovie->bindParam(':source_id', $source_id);
+            $selectMovie->execute();
 
-            $genres = array_map(fn($genre) => $genre->text(), $genresElement);
+            $movieId = null;
 
-            $moviesData[] = [
-                'sourceId' => $movieId,
-                'name' => $movieName,
-                'link' => $movieUrl,
-                'release_year' => $releaseYear,
-                'rating' => $rating,
-                'poster' => $poster,
-                'description' => $description,
-                'directors' => $directors,
-                'actors' => $actors,
-                'genres' => $genres
-            ];
+            if ($foundMovieId = $selectMovie->fetch(PDO::FETCH_ASSOC)) {
+                echo "Movie $source_id in the databases" . PHP_EOL;
+                $movieId = $foundMovieId['id'];
+            } else {
 
-            usort($moviesData, function ($a, $b) {
-                return strcmp($a['sourceId'], $b['sourceId']);
-            });
+                $insertMovieQuery = 'INSERT INTO movies (source_id, name, link, release_year, rating, poster, description)
+                    VALUES (:source_id, :name, :link, :release_year, :rating, :poster, :description)';
+                $insertMovie = $db->prepare($insertMovieQuery);
+
+                $insertMovie->bindParam(':source_id', $source_id);
+                $insertMovie->bindParam(':name', $movieName);
+                $insertMovie->bindParam(':link', $movieUrl);
+                $insertMovie->bindParam(':release_year', $releaseYear);
+                $insertMovie->bindParam(':rating', $rating);
+                $insertMovie->bindParam(':poster', $poster);
+                $insertMovie->bindParam(':description', $description);
+
+                if ($insertMovie->execute()) {
+                    echo $source_id . " added to database" . PHP_EOL;
+                }
+                $movieId = $db->lastInsertId();
+            }
+
+            foreach ($genres as $genre) {
+                addGenre($db, $genre, $movieId);
+            }
+
+            foreach ($directors as $personName) {
+                $position = 'directors';
+                addPerson($db, $personName, $position, $movieId);
+            }
+
+            foreach ($actors as $personName) {
+                $position = 'actor';
+                addPerson($db, $personName, $position, $movieId);
+            }
+
 
             $progress['lastSeen']['sourceId'] = $i;
-
-            file_put_contents($moviesStorageFile, json_encode($moviesData));
 
             file_put_contents($progressDumpFile, json_encode($progress));
 

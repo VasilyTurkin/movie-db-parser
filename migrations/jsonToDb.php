@@ -12,8 +12,6 @@ $moviesData = [];
 
 $moviesStorageFile = __DIR__ . '/../data/movies.json';
 
-ini_set('memory_limit', '2000M');
-
 if (file_exists($moviesStorageFile)) {
     $moviesData = json_decode(file_get_contents($moviesStorageFile), true) ?? [];
 }
