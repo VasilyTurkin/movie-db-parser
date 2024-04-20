@@ -16,7 +16,8 @@
         "imangazaliev/didom": "^2.0",
         "symfony/dom-crawler": "^6.3",
         "ext-dom": "*",
-      "ext-pdo": "*"
+      "ext-pdo": "*",
+      "ext-http": "*"
     },
     "config": {
         "allow-plugins": {

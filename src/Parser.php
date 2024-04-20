@@ -3,6 +3,8 @@
 namespace Src;
 
 use DiDom\Document;
+use Exception;
+use RuntimeException;
 use PDO;
 use DiDom\Exceptions\InvalidSelectorException;
 
@@ -31,7 +33,7 @@ class Parser
 
         $db = new PDO();
 
-        $movieMaxIndex = 15;
+        $movieMaxIndex = 9999999;
 
         $progressDumpFile = __DIR__ . '/../data/progress.json';
         $defaultProgress = [
@@ -39,59 +41,6 @@ class Parser
                 'sourceId' => 1,
             ]
         ];
-
-        function addPerson(object $db, string $personName, string $position, int $movieId): void
-        {
-            $selectPersonQuery = 'SELECT id FROM crew_members WHERE full_name = :full_name LIMIT 1';
-
-            $selectPerson = $db->prepare($selectPersonQuery);
-            $selectPerson->bindParam(':full_name', $personName);
-            $selectPerson->execute();
-
-            if ($existingPerson = $selectPerson->fetch(PDO::FETCH_ASSOC)) {
-                $personId = $existingPerson['id'];
-            } else {
-                $insertPersonQuery = 'INSERT INTO crew_members (full_name, position)
-                          VALUES (:full_name, :position)';
-
-                $insertPerson = $db->prepare($insertPersonQuery);
-                $insertPerson->bindParam(':full_name', $personName);
-                $insertPerson->bindParam(':position', $position);
-                $insertPerson->execute();
-                $personId = $db->lastInsertId();
-            }
-            $assignQuery = 'INSERT IGNORE INTO movie_crew_member (movie_id, crew_member_id)
-                                   VALUES (:movie_id, :crew_member_id)';
-            $assignStatement = $db->prepare($assignQuery);
-            $assignStatement->bindParam(':movie_id', $movieId);
-            $assignStatement->bindParam(':crew_member_id', $personId);
-            $assignStatement->execute();
-        }
-
-        function addGenre(object $db, string $genre, int $movieId): void
-        {
-            $selectGenreQuery = 'SELECT id FROM genres WHERE name = :name_genre LIMIT 1';
-            $selectGenre = $db->prepare($selectGenreQuery);
-            $selectGenre->bindParam(':name_genre', $genre);
-            $selectGenre->execute();
-
-            if ($findGenre = $selectGenre->fetch(PDO::FETCH_ASSOC)) {
-                $genreId = $findGenre['id'];
-            } else {
-                $insertGenreQuery = 'INSERT INTO genres (name) VALUES (:name_genre)';
-                $insertGenre = $db->prepare($insertGenreQuery);
-                $insertGenre->bindParam(':name_genre', $genre);
-                $insertGenre->execute();
-
-                $genreId = $db->lastInsertId();
-            }
-
-            $insertMovieGenreQuery = 'INSERT IGNORE INTO movie_genre (movie_id, genre_id) VALUES (:movie_id, :genre_id)';
-            $insertMovieGenre = $db->prepare($insertMovieGenreQuery);
-            $insertMovieGenre->bindParam(':movie_id', $movieId);
-            $insertMovieGenre->bindParam(':genre_id', $genreId);
-            $insertMovieGenre->execute();
-        }
 
         $progress = $defaultProgress;
 
@@ -109,9 +58,14 @@ class Parser
         $startTotalTime = microtime(true);
 
         for ($i = $startIndex; $i <= $movieMaxIndex; $i++) {
-            $source_id = sprintf('%07d', $i);
+            $sourceId = sprintf('%07d', $i);
 
-            $movieUrl = self::BASE_URL . 'title/tt' . $source_id;
+            if ($this->checkMovieExists($db, $sourceId)) {
+                echo "Movie $sourceId already exists in the databases" . PHP_EOL;
+                continue;
+            }
+
+            $movieUrl = self::BASE_URL . 'title/tt' . $sourceId;
 
             $content = @file_get_contents($movieUrl);
 
@@ -119,7 +73,7 @@ class Parser
                 echo "Not data for parsing. Skip $movieUrl \n";
                 continue;
             } else {
-                echo "Try parsing:  $source_id \n";
+                echo "Try parsing:  $sourceId \n";
             }
 
             $startParsingMovie = microtime(true);
@@ -172,50 +126,41 @@ class Parser
 
             $actors = array_map(fn($actor) => $actor->text(), $actorsElement);
 
-            $selectMovieQuery = 'SELECT id FROM movies WHERE source_id = :source_id LIMIT 1';
-            $selectMovie = $db->prepare($selectMovieQuery);
-            $selectMovie->bindParam(':source_id', $source_id);
-            $selectMovie->execute();
+            $movieData = [
+                'sourceId' => $sourceId,
+                'name' => $movieName,
+                'link' => $movieUrl,
+                'releaseYear' => $releaseYear,
+                'rating' => $rating,
+                'poster' => $poster,
+                'description' => $description,
+                'directors' => $directors,
+                'actors' => $actors,
+                'genres' => $genres
+            ];
 
-            $movieId = null;
-
-            if ($foundMovieId = $selectMovie->fetch(PDO::FETCH_ASSOC)) {
-                echo "Movie $source_id in the databases" . PHP_EOL;
-                $movieId = $foundMovieId['id'];
-            } else {
-
-                $insertMovieQuery = 'INSERT INTO movies (source_id, name, link, release_year, rating, poster, description)
-                    VALUES (:source_id, :name, :link, :release_year, :rating, :poster, :description)';
-                $insertMovie = $db->prepare($insertMovieQuery);
-
-                $insertMovie->bindParam(':source_id', $source_id);
-                $insertMovie->bindParam(':name', $movieName);
-                $insertMovie->bindParam(':link', $movieUrl);
-                $insertMovie->bindParam(':release_year', $releaseYear);
-                $insertMovie->bindParam(':rating', $rating);
-                $insertMovie->bindParam(':poster', $poster);
-                $insertMovie->bindParam(':description', $description);
-
-                if ($insertMovie->execute()) {
-                    echo $source_id . " added to database" . PHP_EOL;
-                }
-                $movieId = $db->lastInsertId();
+            try {
+                $movieId = $this->saveMovie($db, $movieData);
+            } catch (Exception $e) {
+                echo $e->getMessage() . PHP_EOL;
+                continue;
             }
 
+            echo $sourceId . " added to database" . PHP_EOL;
+
             foreach ($genres as $genre) {
-                addGenre($db, $genre, $movieId);
+                $this->addGenre($db, $genre, $movieId);
             }
 
             foreach ($directors as $personName) {
                 $position = 'directors';
-                addPerson($db, $personName, $position, $movieId);
+                $this->addPerson($db, $personName, $position, $movieId);
             }
 
             foreach ($actors as $personName) {
                 $position = 'actor';
-                addPerson($db, $personName, $position, $movieId);
+                $this->addPerson($db, $personName, $position, $movieId);
             }
-
 
             $progress['lastSeen']['sourceId'] = $i;
 
@@ -233,5 +178,89 @@ class Parser
         $totalTime = gmdate("H:i:s", round($endTotalTime - $startTotalTime));
 
         echo "Total time: $totalTime";
+    }
+
+    private function checkMovieExists(PDO $db, string $movieSourceId): bool
+    {
+        $checkQuery = 'SELECT id FROM movies WHERE source_id = :source_id LIMIT 1';
+        $checkQuery = $db->prepare($checkQuery);
+        $checkQuery->bindParam(':source_id', $movieSourceId);
+        $checkQuery->execute();
+
+        return $checkQuery->fetch();
+    }
+
+    private function saveMovie(PDO $db, array $movieData): int
+    {
+        $insertMovieQuery = 'INSERT INTO movies (source_id, name, link, release_year, rating, poster, description)
+                    VALUES (:source_id, :name, :link, :release_year, :rating, :poster, :description)';
+        $insertMovie = $db->prepare($insertMovieQuery);
+
+        $insertMovie->bindParam(':source_id', $movieData['sourceId']);
+        $insertMovie->bindParam(':name', $movieData['name']);
+        $insertMovie->bindParam(':link', $movieData['link']);
+        $insertMovie->bindParam(':release_year', $movieData['releaseYear']);
+        $insertMovie->bindParam(':rating', $movieData['rating']);
+        $insertMovie->bindParam(':poster', $movieData['poster']);
+        $insertMovie->bindParam(':description', $movieData['description']);
+
+        if (!$insertMovie->execute()) {
+            throw new RuntimeException('Can\'t save movie');
+        }
+
+        return $db->lastInsertId();
+    }
+
+    private function addPerson(PDO $db, string $personName, string $position, int $movieId): void
+    {
+        $selectPersonQuery = 'SELECT id FROM crew_members WHERE full_name = :full_name LIMIT 1';
+
+        $selectPerson = $db->prepare($selectPersonQuery);
+        $selectPerson->bindParam(':full_name', $personName);
+        $selectPerson->execute();
+
+        if ($existingPerson = $selectPerson->fetch(PDO::FETCH_ASSOC)) {
+            $personId = $existingPerson['id'];
+        } else {
+            $insertPersonQuery = 'INSERT INTO crew_members (full_name, position)
+                          VALUES (:full_name, :position)';
+
+            $insertPerson = $db->prepare($insertPersonQuery);
+            $insertPerson->bindParam(':full_name', $personName);
+            $insertPerson->bindParam(':position', $position);
+            $insertPerson->execute();
+            $personId = $db->lastInsertId();
+        }
+        $assignQuery = 'INSERT IGNORE INTO movie_crew_member (movie_id, crew_member_id)
+                                   VALUES (:movie_id, :crew_member_id)';
+        $assignStatement = $db->prepare($assignQuery);
+        $assignStatement->bindParam(':movie_id', $movieId);
+        $assignStatement->bindParam(':crew_member_id', $personId);
+        $assignStatement->execute();
+    }
+
+    private function addGenre(PDO $db, string $genre, int $movieId): void
+    {
+        $selectGenreQuery = 'SELECT id FROM genres WHERE name = :name_genre LIMIT 1';
+        $selectGenre = $db->prepare($selectGenreQuery);
+        $selectGenre->bindParam(':name_genre', $genre);
+        $selectGenre->execute();
+
+        if ($findGenre = $selectGenre->fetch(PDO::FETCH_ASSOC)) {
+            $genreId = $findGenre['id'];
+        } else {
+            $insertGenreQuery = 'INSERT INTO genres (name) VALUES (:name_genre)';
+            $insertGenre = $db->prepare($insertGenreQuery);
+            $insertGenre->bindParam(':name_genre', $genre);
+            $insertGenre->execute();
+
+            $genreId = $db->lastInsertId();
+        }
+
+        $insertMovieGenreQuery = 'INSERT IGNORE INTO movie_genre (movie_id, genre_id) VALUES (:movie_id, :genre_id)';
+        $insertMovieGenre = $db->prepare($insertMovieGenreQuery);
+        $insertMovieGenre->bindParam(':movie_id', $movieId);
+        $insertMovieGenre->bindParam(':genre_id', $genreId);
+        $insertMovieGenre->execute();
     }
 }
