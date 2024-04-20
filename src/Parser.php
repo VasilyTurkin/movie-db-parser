@@ -10,6 +10,7 @@ use DiDom\Exceptions\InvalidSelectorException;
 
 class Parser
 {
+    // @codingStandardsIgnoreStart
     private const BASE_URL = 'https://www.imdb.com/';
     private const TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div > h1 > span';
     private const ORIGINAL_TITLE = 'main > div > section > section > div:nth-child(5) > section > section > div > div.sc-b7c53eda-0.dUpRPQ > div';
@@ -20,6 +21,7 @@ class Parser
     private const DIRECTORS = 'section > div > div > div > section > div > div > ul > li:nth-child(1) > div > ul > li';
     private const ACTORS = 'section.ipc-page-section.ipc-page-section--base.sc-bfec09a1-0 > div > div  > div > div > a';
     private const GENRES = 'section > div > section > section > div > div > div > section > div > div > a > span';
+    // @codingStandardsIgnoreEnd
 
     /**
      * @throws InvalidSelectorException
