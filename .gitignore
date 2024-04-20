@@ -5,3 +5,6 @@
 /data/
 !/data/.gitkeeper
 /migrations/notion
+/migrations/jsonToDb.php
+src/reserve.php
+.env

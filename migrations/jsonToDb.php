@@ -4,6 +4,20 @@ namespace Src;
 
 use PDO;
 
+$user = 'turkin';
+
+$pass = 'Ajnc3&32__dw62';
+
+$moviesData = [];
+
+$moviesStorageFile = __DIR__ . '/../data/movies.json';
+
+if (file_exists($moviesStorageFile)) {
+    $moviesData = json_decode(file_get_contents($moviesStorageFile), true) ?? [];
+}
+
+$db = new PDO('mysql:host=74.119.192.202:3306;dbname=movies', $user, $pass);
+
 function addGenre(object $db, string $genre, int $movieId): void
 {
     $selectGenreQuery = 'SELECT id FROM genres WHERE name = :name_genre LIMIT 1';
@@ -57,20 +71,6 @@ function addPerson(object $db, string $personName, string $position, int $movieI
     $assignStatement->bindParam(':crew_member_id', $personId);
     $assignStatement->execute();
 }
-
-$user = '';
-
-$pass = '';
-
-$moviesData = [];
-
-$moviesStorageFile = __DIR__ . '/../data/movies.json';
-
-if (file_exists($moviesStorageFile)) {
-    $moviesData = json_decode(file_get_contents($moviesStorageFile), true) ?? [];
-}
-
-$db = new PDO('mysql:host=74.119.192.202:3306;dbname=movies', $user, $pass);
 
 foreach ($moviesData as $movie) {
     $selectMovieQuery = 'SELECT id FROM movies WHERE source_id = :source_id LIMIT 1';
