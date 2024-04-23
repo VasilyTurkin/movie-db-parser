@@ -48,7 +48,7 @@ class Db
         }
 
         foreach ($movieData['directors'] as $personName) {
-            $position = 'directors';
+            $position = 'director';
             $this->addPerson($personName, $position, $movieId);
         }
 

@@ -1,4 +1,6 @@
 
+use Movie;
+
 CREATE TABLE IF NOT EXISTS movies
 (
     id           BIGINT AUTO_INCREMENT NOT NULL,
