@@ -23,3 +23,5 @@ try {
     $parser->run();
 } catch (InvalidSelectorException $e) {
 }
+
+$dbDriver = null;
