@@ -20,7 +20,6 @@ class Parser
     private const ACTORS = 'section.ipc-page-section.ipc-page-section--base.sc-bfec09a1-0 > div > div  > div > div > a';
     private const GENRES = 'section > div > section > section > div > div > div > section > div > div > a > span';
     // @codingStandardsIgnoreEnd
-    private const MOVIE_MAX_INDEX = 99999999;
 
     private Progress $progress;
 
@@ -43,7 +42,7 @@ class Parser
 
         $startTotalTime = microtime(true);
 
-        for ($i = $startIndex; $i <= self::MOVIE_MAX_INDEX; $i++) {
+        for ($i = $startIndex; $i <= getenv('MOVIE_MAX_INDEX'); $i++) {
             $startParsingMovie = microtime(true);
 
             $sourceId = sprintf('%07d', $i);

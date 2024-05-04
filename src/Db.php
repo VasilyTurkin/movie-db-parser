@@ -3,6 +3,7 @@
 namespace Src;
 
 use PDO;
+use RuntimeException;
 
 class Db
 {
@@ -48,7 +49,7 @@ class Db
         }
 
         foreach ($movieData['directors'] as $personName) {
-            $position = 'directors';
+            $position = 'director';
             $this->addPerson($personName, $position, $movieId);
         }
 
@@ -70,19 +71,19 @@ class Db
             $personId = $existingPerson['id'];
         } else {
             $insertPersonQuery = 'INSERT INTO crew_members (full_name, position)
-                          VALUES (:full_name, :position)';
+                          VALUES (:full_name)';
 
             $insertPerson = $this->db->prepare($insertPersonQuery);
             $insertPerson->bindParam(':full_name', $personName);
-            $insertPerson->bindParam(':position', $position);
             $insertPerson->execute();
             $personId = $this->db->lastInsertId();
         }
-        $assignQuery = 'INSERT IGNORE INTO movie_crew_member (movie_id, crew_member_id)
-                                   VALUES (:movie_id, :crew_member_id)';
+        $assignQuery = 'INSERT IGNORE INTO movie_crew_member (movie_id, crew_member_id, position)
+                                   VALUES (:movie_id, :crew_member_id, :position)';
         $assignStatement = $this->db->prepare($assignQuery);
         $assignStatement->bindParam(':movie_id', $movieId);
         $assignStatement->bindParam(':crew_member_id', $personId);
+        $assignStatement->bindParam(':position', $position);
         $assignStatement->execute();
     }
 

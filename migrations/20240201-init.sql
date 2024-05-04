@@ -1,3 +1,4 @@
+use Movie;
 
 CREATE TABLE IF NOT EXISTS movies
 (
@@ -30,16 +31,16 @@ CREATE TABLE IF NOT EXISTS movie_genre
 
 CREATE TABLE IF NOT EXISTS crew_members
 (
-    id        BIGINT   AUTO_INCREMENT NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    position  VARCHAR(255) NULL,
+    id        BIGINT AUTO_INCREMENT NOT NULL,
+    full_name VARCHAR(255)          NOT NULL,
     PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS movie_crew_member
 (
-    movie_id       BIGINT NOT NULL,
-    crew_member_id BIGINT NOT NULL,
+    movie_id       BIGINT       NOT NULL,
+    crew_member_id BIGINT       NOT NULL,
+    position       VARCHAR(255) NOT NULL,
     FOREIGN KEY (movie_id) REFERENCES movies (id) ON DELETE CASCADE,
     FOREIGN KEY (crew_member_id) REFERENCES crew_members (id) ON DELETE CASCADE
 );
